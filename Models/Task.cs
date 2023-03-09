@@ -8,9 +8,9 @@ namespace Task_Management.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
 
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         public DateTime DateCreated { get; set; }
 
@@ -18,14 +18,14 @@ namespace Task_Management.Models
 
         public int Priority { get; set; }
 
-        public List<byte[]> Attachments { get; set; }
+        public List<byte[]>? Attachments { get; set; }
 
-        public List<string> Tags { get; set; }
+        public List<string>? Tags { get; set; }
 
         public bool Status { get; set; }
 
-        public List<TaskHistory> History { get; set; }
+        public List<TaskHistory>? History { get; set; }
 
-        public List<ObjectId> Dependencies { get; set; }
+        public List<ObjectId>? Dependencies { get; set; }
     }
 }

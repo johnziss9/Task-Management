@@ -7,10 +7,9 @@ namespace Task_Management.Models
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
-        public string Username { get; set; }
-        public byte[] PasswordHash { get; set; }
-        public byte[] PasswordSalt { get; set; }
-        List<Task> Tasks { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public byte[] PasswordHash { get; set; } = new byte[0];
+        public byte[] PasswordSalt { get; set; } = new byte[0];
+        List<Task>? Tasks { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Task_Management.Services;
 
 namespace Task_Management.Controllers
 {
@@ -6,10 +7,17 @@ namespace Task_Management.Controllers
     [Route("[controller]")]
     public class TaskController : ControllerBase
     {
+        private readonly TaskService _taskService;
+
+        public TaskController(TaskService taskService)
+        {
+            _taskService = taskService;
+        }
+
         [Route("GetAll")]
         public IActionResult GetAll()
         {
-            return Ok("This will return all tasks");
+            return Ok(_taskService.GetAll());
         }
     }
 }

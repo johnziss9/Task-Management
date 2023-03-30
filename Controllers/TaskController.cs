@@ -15,15 +15,15 @@ namespace Task_Management.Controllers
         }
 
         [Route("GetAll")]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            return Ok(_taskService.GetAll());
+            return Ok(await _taskService.GetAll());
         }
 
         [HttpPost]
-        public IActionResult AddTask(Models.Task task)
+        public async Task<IActionResult> AddTask(Models.Task task)
         {
-            return Ok(_taskService.AddTask(task));
+            return Ok(await _taskService.AddTask(task));
         }
     }
 }

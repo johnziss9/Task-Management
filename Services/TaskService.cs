@@ -6,16 +6,21 @@ namespace Task_Management.Services
             new Models.Task()
         };
 
-        public List<Models.Task> GetAll()
+        public async Task<ServiceResponse<List<Models.Task>>> GetAll()
         {
-            return tasks;
+            ServiceResponse<List<Models.Task>> serviceResponse = new ServiceResponse<List<Models.Task>>();
+            serviceResponse.Data = tasks;
+            
+            return serviceResponse;
         }
 
-        public List<Models.Task> AddTask(Models.Task task)
+        public async Task<ServiceResponse<List<Models.Task>>> AddTask(Models.Task task)
         {
+            ServiceResponse<List<Models.Task>> serviceResponse = new ServiceResponse<List<Models.Task>>();
             tasks.Add(task);
+            serviceResponse.Data = tasks;
 
-            return tasks;
+            return serviceResponse;
         }
     }
 }

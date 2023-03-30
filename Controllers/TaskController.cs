@@ -19,5 +19,11 @@ namespace Task_Management.Controllers
         {
             return Ok(_taskService.GetAll());
         }
+
+        [HttpPost]
+        public IActionResult AddTask(Models.Task task)
+        {
+            return Ok(_taskService.AddTask(task));
+        }
     }
 }

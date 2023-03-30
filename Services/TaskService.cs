@@ -1,5 +1,3 @@
-using Task_Management.Models;
-
 namespace Task_Management.Services
 {
     public class TaskService
@@ -10,6 +8,13 @@ namespace Task_Management.Services
 
         public List<Models.Task> GetAll()
         {
+            return tasks;
+        }
+
+        public List<Models.Task> AddTask(Models.Task task)
+        {
+            tasks.Add(task);
+
             return tasks;
         }
     }

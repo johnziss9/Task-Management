@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Task_Management</RootNamespace>
+    <UserSecretsId>1db46d1b-3ff3-4554-8d5a-9796d29ce6a2</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

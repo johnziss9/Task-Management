@@ -17,8 +17,5 @@ namespace Task_Management.Models
 
         [BsonElement("passwordSalt")]
         public byte[] PasswordSalt { get; set; } = new byte[0];
-
-        [BsonElement("tasks")]
-        List<Task>? Tasks { get; set; }
     }
 }

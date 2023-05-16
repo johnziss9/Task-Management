@@ -7,7 +7,7 @@ namespace Task_Management.Models
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string? Id { get; set; }
+        public string Id { get; set; }
         
         [BsonElement("title")]
         public string Title { get; set; } = string.Empty;
@@ -15,11 +15,14 @@ namespace Task_Management.Models
         [BsonElement("description")]
         public string Description { get; set; } = string.Empty;
 
+        [BsonElement("createdBy")]
+        public User? CreatedBy { get; set; }
+
         [BsonElement("dateCreated")]
         public DateTime DateCreated { get; set; }
 
-        [BsonElement("dateModified")]
-        public DateTime DateModified { get; set; }
+        [BsonElement("assignedTo")]
+        public User? AssignedTo { get; set; }
 
         [BsonElement("priority")]
         public int Priority { get; set; }

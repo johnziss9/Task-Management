@@ -1,16 +1,19 @@
 using MongoDB.Driver;
 using Task_Management.Data;
+using Task_Management.Services.MessagingService;
 
-namespace Task_Management.Services
+namespace Task_Management.Services.TaskService
 {
-    public class TaskService
+    public class TaskService : ITaskService
     {
         private readonly IConfiguration _config;
         private readonly IMongoCollection<Models.Task> _tasks;
+        private readonly IMessageProducer _producer;
 
-        public TaskService(IConfiguration config, IDatabaseSettings databaseSettings)
+        public TaskService(IConfiguration config, IDatabaseSettings databaseSettings, IMessageProducer producer)
         {
             _config = config;
+            _producer = producer;
 
             var client = new MongoClient(_config["AppSettings:DatabaseSettings:ConnectionString"]);
             var database = client.GetDatabase(databaseSettings.DatabaseName);
@@ -39,6 +42,7 @@ namespace Task_Management.Services
         {
             ServiceResponse<List<Models.Task>> serviceResponse = new ServiceResponse<List<Models.Task>>();
             await _tasks.InsertOneAsync(task);
+            _producer.SendMessage<Models.Task>(task);
             List<Models.Task> tasks = await _tasks.Find(task => true).ToListAsync();
             serviceResponse.Data = tasks;
 

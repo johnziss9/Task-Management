@@ -7,7 +7,7 @@ namespace Task_Management.Models
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
+        public string? Id { get; set; }
         
         [BsonElement("title")]
         public string Title { get; set; } = string.Empty;

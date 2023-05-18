@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Task_Management.Services;
+using Task_Management.Services.TaskService;
 
 namespace Task_Management.Controllers
 {
@@ -7,9 +7,9 @@ namespace Task_Management.Controllers
     [Route("[controller]")]
     public class TaskController : ControllerBase
     {
-        private readonly TaskService _taskService;
+        private readonly ITaskService _taskService;
 
-        public TaskController(TaskService taskService)
+        public TaskController(ITaskService taskService)
         {
             _taskService = taskService;
         }

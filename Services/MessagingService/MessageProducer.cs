@@ -17,7 +17,7 @@ namespace Task_Management.Services.MessagingService
 
             using var channel = connection.CreateModel();
 
-            channel.QueueDeclare("Tasks Notifications", durable: true, exclusive: false, autoDelete: false, arguments: null);
+            channel.QueueDeclare("NotificationsQueue", durable: true, exclusive: false, autoDelete: false, arguments: null);
 
             var messageSerialiser = JsonSerializer.Serialize(message);
             var body = Encoding.UTF8.GetBytes(messageSerialiser);

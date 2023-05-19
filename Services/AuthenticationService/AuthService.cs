@@ -1,8 +1,11 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using Task_Management.Data;
 using Task_Management.Models;
 
@@ -41,6 +44,7 @@ namespace Task_Management.Services.AuthenticationService
             else
             {
                 response.Data = CreateToken(user);
+                GetAssignedToMessagesForUser(user.Id);
             }
 
             return response;
@@ -65,7 +69,7 @@ namespace Task_Management.Services.AuthenticationService
 
             await _users.InsertOneAsync(user);
 
-            // Check if response.Data = user.Id is needed
+            response.Data = user.Id;
             return response;
         }
 
@@ -94,7 +98,7 @@ namespace Task_Management.Services.AuthenticationService
             {
                 var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
 
-                for (int i = 0; i < computedHash.Length; i++) 
+                for (int i = 0; i < computedHash.Length; i++)
                 {
                     if (computedHash[i] != passwordHash[i])
                         return false;
@@ -112,7 +116,7 @@ namespace Task_Management.Services.AuthenticationService
                 new Claim(ClaimTypes.Name, user.Username)
             };
 
-            SymmetricSecurityKey key  = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config.GetSection("AppSettings:AppSettings:Token").Value));
+            SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config.GetSection("AppSettings:AppSettings:Token").Value));
             SigningCredentials credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
             SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
@@ -126,6 +130,47 @@ namespace Task_Management.Services.AuthenticationService
             SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
 
             return tokenHandler.WriteToken(token);
+        }
+
+        public List<string> GetAssignedToMessagesForUser(string userId)
+        {
+            var factory = new ConnectionFactory()
+            {
+                HostName = "localhost"
+            };
+
+            using var connection = factory.CreateConnection();
+
+            using var channel = connection.CreateModel();
+
+            channel.QueueDeclare("NotificationsQueue", durable: true, exclusive: false, autoDelete: false, arguments: null);
+
+            var consumer = new EventingBasicConsumer(channel);
+
+            var messages = new List<string>();
+
+            consumer.Received += (model, eventArgs) =>
+            {
+                var body = eventArgs.Body.ToArray();
+                var message = Encoding.UTF8.GetString(body);
+
+                // Deserialize the message payload to your message class or structure
+                var taskMessage = JsonSerializer.Deserialize<Models.Task>(message);
+
+                if (taskMessage.AssignedTo.Id == userId)
+                {
+                    messages.Add(message);
+                    Console.WriteLine($"Received {message}");
+
+                    // Acknowledge the message to remove it from the queue
+                    channel.BasicAck(eventArgs.DeliveryTag, multiple: false);
+                }
+
+            };
+
+            channel.BasicConsume(queue: "NotificationsQueue", autoAck: false, consumer: consumer);
+
+            return messages;
         }
     }
 }

@@ -42,7 +42,7 @@ namespace Task_Management.Services.TaskService
         {
             ServiceResponse<List<Models.Task>> serviceResponse = new ServiceResponse<List<Models.Task>>();
             await _tasks.InsertOneAsync(task);
-            _producer.SendMessage<Models.Task>(task);
+            // _producer.SendMessage<Models.Task>(task);
             List<Models.Task> tasks = await _tasks.Find(task => true).ToListAsync();
             serviceResponse.Data = tasks;
 
@@ -55,7 +55,22 @@ namespace Task_Management.Services.TaskService
 
             try
             {
+                 // Check if update includes a value for assignedTo property
+                Models.Task existingTask = await _tasks.Find<Models.Task>(t => t.Id == id).FirstOrDefaultAsync();
+
+                if (existingTask == null)
+                {
+                    serviceResponse.Success = false;
+                    serviceResponse.Message = "Task not found.";
+                    
+                    return serviceResponse;
+                }
+
+                if (existingTask.AssignedTo.Id != updatedTask.AssignedTo.Id && updatedTask.AssignedTo.Id != null)
+                    _producer.SendMessage<Models.Task>(updatedTask);
+
                 await _tasks.ReplaceOneAsync(t => t.Id == id, updatedTask);
+
                 Models.Task task = await _tasks.Find<Models.Task>(t => t.Id == id).FirstOrDefaultAsync();
                 serviceResponse.Data = task;
             }

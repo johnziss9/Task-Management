@@ -5,5 +5,6 @@ namespace Task_Management.Data
         string DatabaseName { get; set; }
         string TasksCollectionName { get; set; }
         string UsersCollectionName { get; set; }
+        string TasksHistoryCollectionName { get; set; }
     }
 }

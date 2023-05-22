@@ -34,7 +34,7 @@ namespace Task_Management.Models
         public List<string>? Tags { get; set; }
 
         [BsonElement("status")]
-        public bool Status { get; set; }
+        public string Status { get; set; }
 
         [BsonElement("history")]
         public List<TaskHistory>? History { get; set; }

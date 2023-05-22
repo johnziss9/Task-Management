@@ -1,9 +1,14 @@
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace Task_Management.Models
 {
     public class TaskHistory
     {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? Id { get; set; }
+
         [BsonElement("user")]
         public User? User { get; set; }
 
@@ -12,5 +17,8 @@ namespace Task_Management.Models
         
         [BsonElement("description")]
         public string? Description { get; set; }
+
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? TaskId { get; set; }
     }
 }

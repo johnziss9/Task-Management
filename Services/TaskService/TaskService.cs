@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MongoDB.Driver;
 using Task_Management.Data;
 using Task_Management.Models;
@@ -10,17 +11,21 @@ namespace Task_Management.Services.TaskService
         private readonly IConfiguration _config;
         private readonly IMongoCollection<Models.Task> _tasks;
         private readonly IMongoCollection<TaskHistory> _taskHistory;
+        private readonly IMongoCollection<User> _users;
         private readonly IMessageProducer _producer;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public TaskService(IConfiguration config, IDatabaseSettings databaseSettings, IMessageProducer producer)
+        public TaskService(IConfiguration config, IDatabaseSettings databaseSettings, IMessageProducer producer, IHttpContextAccessor httpContextAccessor)
         {
             _config = config;
             _producer = producer;
+            _httpContextAccessor = httpContextAccessor;
 
             var client = new MongoClient(_config["AppSettings:DatabaseSettings:ConnectionString"]);
             var database = client.GetDatabase(databaseSettings.DatabaseName);
             _tasks = database.GetCollection<Models.Task>(databaseSettings.TasksCollectionName);
             _taskHistory = database.GetCollection<TaskHistory>(databaseSettings.TasksHistoryCollectionName);
+            _users = database.GetCollection<User>(databaseSettings.UsersCollectionName);
         }
 
         public async Task<ServiceResponse<List<Models.Task>>> GetAll()
@@ -44,8 +49,14 @@ namespace Task_Management.Services.TaskService
         public async Task<ServiceResponse<List<Models.Task>>> AddTask(Models.Task task)
         {
             ServiceResponse<List<Models.Task>> serviceResponse = new ServiceResponse<List<Models.Task>>();
+
+            // Add user to CreatedBy field
+            var currentUser = _users.Find<User>(u => u.Id == GetUserId()).FirstOrDefault();
+            task.CreatedBy = currentUser;
+            task.DateCreated = DateTime.Now;
+
             await _tasks.InsertOneAsync(task);
-            await AddTaskToHistory(new TaskHistory { TaskId = task.Id, Description = "Task Created", DateModified = DateTime.Now });
+            await AddTaskToHistory(new TaskHistory { TaskId = task.Id, User = currentUser, Description = $"Task Created by {currentUser.Username}", DateModified = DateTime.Now });
 
             // Retrieve all TaskHistory items and add them to the History field
             List<TaskHistory> taskHistory = await _taskHistory.Find(item => item.TaskId == task.Id).ToListAsync();
@@ -76,6 +87,9 @@ namespace Task_Management.Services.TaskService
                     return serviceResponse;
                 }
 
+                // Get currently logged in user
+                var user = _users.Find<User>(u => u.Id == GetUserId()).FirstOrDefault();
+
                 bool assignedToChanged = existingTask.AssignedTo?.Id != updatedTask.AssignedTo?.Id;
                 bool statusChanged = existingTask.Status != updatedTask.Status;
 
@@ -84,21 +98,22 @@ namespace Task_Management.Services.TaskService
 
                 if (assignedToChanged || statusChanged)
                 {
-                    var currentUser = existingTask.AssignedTo == null ? "Unassigned" : existingTask.AssignedTo.Username;
-                    var updatedUser = updatedTask.AssignedTo == null ? "Unassigned" : updatedTask.AssignedTo.Username;
+                    var currentUser = existingTask.AssignedTo == null ? "Unassigned" : _users.Find<User>(u => u.Id == existingTask.AssignedTo.Id).FirstOrDefault().Username;
+                    var updatedUser = updatedTask.AssignedTo == null ? "Unassigned" : _users.Find<User>(u => u.Id == updatedTask.AssignedTo.Id).FirstOrDefault().Username;
 
                     string description = string.Empty;
 
                     if (assignedToChanged && statusChanged)
-                        description = $"Task has been assigned from {currentUser} to {updatedUser} and status has changed from {existingTask.Status} to {updatedTask.Status}";
+                        description = $"Task has been assigned from {currentUser} to {updatedUser} and status has changed from {existingTask.Status} to {updatedTask.Status} by {user.Username}";
                     else if (assignedToChanged)
-                        description = $"Task has been assigned from {currentUser} to {updatedUser}";
+                        description = $"Task has been assigned from {currentUser} to {updatedUser} by {user.Username}";
                     else if (statusChanged)
-                        description = $"Task status has changed from {existingTask.Status} to {updatedTask.Status}";
+                        description = $"Task status has changed from {existingTask.Status} to {updatedTask.Status} by {user.Username}";
 
                     await AddTaskToHistory(new TaskHistory
                     {
                         TaskId = existingTask.Id,
+                        User = user,
                         DateModified = DateTime.Now,
                         Description = description
                     });                    
@@ -131,5 +146,7 @@ namespace Task_Management.Services.TaskService
 
             return serviceResponse;
         }
+
+        private string GetUserId() => _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
     }
 }

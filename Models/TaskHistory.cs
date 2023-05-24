@@ -19,6 +19,7 @@ namespace Task_Management.Models
         public string? Description { get; set; }
 
         [BsonRepresentation(BsonType.ObjectId)]
+        [BsonElement("taskId")]
         public string? TaskId { get; set; }
     }
 }

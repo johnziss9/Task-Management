@@ -55,8 +55,21 @@ namespace Task_Management.Services.TaskService
             task.CreatedBy = currentUser;
             task.DateCreated = DateTime.Now;
 
+            // Check if AssignedTo field has a value
+            var assignedTo = task.AssignedTo == null ? null : _users.Find<User>(u => u.Id == task.AssignedTo.Id).FirstOrDefault();
+            task.AssignedTo = assignedTo;
+
             await _tasks.InsertOneAsync(task);
-            await AddTaskToHistory(new TaskHistory { TaskId = task.Id, User = currentUser, Description = $"Task Created by {currentUser.Username}", DateModified = DateTime.Now });
+            await AddTaskToHistory(
+                new TaskHistory { 
+                    TaskId = task.Id, 
+                    User = currentUser, 
+                    Description = $"Task Created by {currentUser.Username}", 
+                    DateModified = DateTime.Now,
+                    AssignedFrom = null,
+                    AssignedTo = assignedTo
+                }
+            );
 
             // Retrieve all TaskHistory items and add them to the History field
             List<TaskHistory> taskHistory = await _taskHistory.Find(item => item.TaskId == task.Id).ToListAsync();
@@ -115,7 +128,9 @@ namespace Task_Management.Services.TaskService
                         TaskId = existingTask.Id,
                         User = user,
                         DateModified = DateTime.Now,
-                        Description = description
+                        Description = description,
+                        AssignedFrom = existingTask.AssignedTo == null ? null : _users.Find<User>(u => u.Id == existingTask.AssignedTo.Id).FirstOrDefault(),
+                        AssignedTo = updatedTask.AssignedTo == null ? null : _users.Find<User>(u => u.Id == updatedTask.AssignedTo.Id).FirstOrDefault()
                     });                    
                 }
 

@@ -21,5 +21,11 @@ namespace Task_Management.Models
         [BsonRepresentation(BsonType.ObjectId)]
         [BsonElement("taskId")]
         public string? TaskId { get; set; }
+
+        [BsonElement("assignedFrom")]
+        public User? AssignedFrom { get; set; }
+
+        [BsonElement("assignedTo")]
+        public User? AssignedTo { get; set; }
     }
 }
